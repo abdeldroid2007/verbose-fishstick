@@ -1,35 +1,36 @@
-name: Save installed packages to files
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
-
-      - name: Create packages directory
-        run: mkdir -p packages
-
-      - name: Install packages
-        run: |
-          python3 -m pip install --upgrade pip
-          pip3 install -r requirements.txt
-
-      - name: Save installed packages to files
-        run: |
-          pip3 freeze | awk '{print $1}' | xargs -L1 sh -c 'echo "$1" > packages/$(echo $1 | cut -d"-" -f1).txt'
-          git config --local core.autocrlf input
-          git add packages
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+    - name: Lint with flake8
+      run: |
+        python3 -m venv ./myenv
+        source ./myenv/bin/activate
+        pip install -r requirements.txt
+    - name: Test with pytest
+      run: |
+        python3 chat.test.py
