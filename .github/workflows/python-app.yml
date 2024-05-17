@@ -1,31 +1,35 @@
-name: Set up virtual environment and install packages
+name: Save installed packages to files
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.x
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
 
-    - name: Set up virtual environment
-      run: |
-        python3 -m venv .venv
-        source .venv/bin/activate
+      - name: Create packages directory
+        run: mkdir -p packages
 
-    - name: Install packages
-      run: |
-        pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install packages
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt
 
-    - name: Save virtual environment
-      run: |
-        pip freeze > .venv/requirements.txt
-        git add .venv/
+      - name: Save installed packages to files
+        run: |
+          pip3 freeze | awk '{print $1}' | xargs -L1 sh -c 'echo "$1" > packages/$(echo $1 | cut -d"-" -f1).txt'
+          git config --local core.autocrlf input
+          git add packages
